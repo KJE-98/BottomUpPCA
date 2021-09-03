@@ -1,0 +1,3 @@
+[submodule "pgmjs"]
+	path = pgmjs
+	url = https://github.com/vladh/pgmjs.git

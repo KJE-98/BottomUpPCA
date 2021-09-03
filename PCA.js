@@ -46,6 +46,7 @@ function normalizeMatrix (dataset, dimension) {
 // computes the covariance matrix given a normalized and standardized dataset
 function computeCovariance (dataset, dimension) {
   let result = new Array(dimension).fill().map(() => new Array(dimension).fill(0));
+  console.log("created array of zeros for covariance matrix");
   for (let i = 0; i<dimension; i++){
     for (let j = 0; j<dimension; j++){
       for (let k = 0; k<dataset.length; k++){
@@ -94,9 +95,9 @@ function specialPowerIteration (vector, covariance, iterations, trace) {
   let dimension = vector.length;
   vector = [vector];
   for (let i = 0; i<iterations; i++){
-
+    console.log("vector length:", vector[0].length);
+    console.log("matrix dimensions:", covariance.length, covariance[0].length);
     let temporaryVector = numbers.matrix.multiply(vector, covariance);
-
     temporaryVector = numbers.matrix.subtraction(temporaryVector, numbers.matrix.scalar(vector, trace));
 
     temporaryVector = numbers.matrix.scalar(temporaryVector, -1);
@@ -106,6 +107,8 @@ function specialPowerIteration (vector, covariance, iterations, trace) {
 
     vector = temporaryVector;
 
+    if(i === 100) console.log("specialPowerIteration: on iteration", i);
+    if(i%2000 === 0) console.log("specialPowerIteration: on iteration", i);
   }
 
   return vector[0];
@@ -127,10 +130,10 @@ function createRandomVector(dimension){
 function computeSmallestEigenvalue(covariance, iterations){
   let dimension = covariance.length;
   let trace = findTrace(covariance);
-
+  console.log("computeSmallestEigenvalue: trace found");
   let vector = createRandomVector(dimension);
+  console.log("createRandomVector");
   // first we find a vector that moves a lot on its first go;
-
   return specialPowerIteration(vector, covariance, iterations, trace);
 }
 
@@ -177,15 +180,20 @@ function transform(vector, basisVectors){
 function filter(dataset, basisVectors, toNormalize){
   dimension = basisVectors.length;
   let transformedData = dataset.map((element) => transform(element, basisVectors));
+  console.log("transformedData initialized");
   let covarianceMatrix;
   if (toNormalize){
     normalizedData = normalizeMatrix(transformedData, dimension);
+    console.log("normalizedData initialized");
     covarianceMatrix = computeCovariance(normalizedData, dimension);
+    console.log("covarianceMatrix initialized");
   }else{
     covarianceMatrix = computeCovariance(transformedData, dimension);
   }
   let smallestComponent = computeSmallestEigenvalue(covarianceMatrix, 100000);
+  console.log("smallestComponent initialized");
   let newBasis = orthonormalBasis([smallestComponent]);
+  console.log("newBasis initialized");
   return [smallestComponent, newBasis];
 }
 
