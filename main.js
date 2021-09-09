@@ -37,27 +37,62 @@ console.log('principle component', principleComponent);
 
 /// to use power iteration, find a vector that really moves on its first go
 /// could possibly do better than random vectors in the orthonormalBasis function
+let dataArray;
+let defaultBasis = numbers.matrix.identity(10304).map((element) => [element]);
 let files = fsPromises.readdir("./images");
-let array = files.then((result) => randomlyChooseFiles(result, 100));
-
+let array = files.then((result) => randomlyChooseFiles(result, 50));
 let data = array.then((result) => Promise.all(result));
+let newData = data.then((data) => {
+  let filteredData = runFilter(data, defaultBasis);
+  console.log(filteredData);
+  dataArray.push(filteredData);
+  return filteredData;
+});
+for (int i = 1; i < 1000; i++){
+  data = newData.then(
+    (filteredData) => {
+      let randomFiles = randomlyChooseFiles(array.state, numberOfFilesGiveni(i));
+      return randomFiles;
+    }
+  );
+  newData = data.then(
+    (result) => {
+      let filteredData = runFilter(data, dataArray[i-1]);
+      dataArray.push(filteredData);
+      console.log(filteredData);
+      return filteredData;
+    }
+  );
+}
+console.log("done");
+/*for (let i = 0; i<1000; i++){
+  let tempArray = newData.then((result)=> randomlyChooseFiles(result))
+}*/
 
-let newData = data.then(runFilter);
+function numberOfFilesGiveni(i){
+  if (i<500){
+    return 35;
+  }else if (i<5000){
+    return 40;
+  }else{
+    return 100;
+  }
+}
+
 
 function randomlyChooseFiles (arrayOfFiles, numberOfFiles){
   let array = [];
   for(let i = 0; i<numberOfFiles; i++){
-    let randomIndex = Math.floor(Math.random());
+    let randomIndex = Math.floor(Math.random()*arrayOfFiles.length);
     let randomImagePromise = pgmjs.readPgm("./images/"+arrayOfFiles[randomIndex]).then((result) => result.pixels);
     array.push(randomImagePromise);
   }
   return array;
 }
 
-function runFilter(data){
+function runFilter(data, basis){
   console.log("starting runFilter");
-  let defaultBasis = numbers.matrix.identity(10304).map((element) => [element]);
-  let result = functions.filter(data, defaultBasis, true);
+  let result = functions.filter(data, basis, false);
   return result;
 }
 //dataPoint.then((result) => console.log(result));

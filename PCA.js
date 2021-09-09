@@ -48,9 +48,10 @@ function computeCovariance (dataset, dimension) {
   let result = new Array(dimension).fill().map(() => new Array(dimension).fill(0));
   console.log("created array of zeros for covariance matrix");
   for (let i = 0; i<dimension; i++){
+    console.log("computeCovariance: i index is", i);
     for (let j = 0; j<dimension; j++){
       for (let k = 0; k<dataset.length; k++){
-        result [i][j] += dataset[k][i]*dataset[k][j];
+        result[i][j] += dataset[k][i]*dataset[k][j];
       }
     }
   }
@@ -64,10 +65,11 @@ function powerIteration (vector, covariance, iterations) {
   let dimension = vector.length;
   vector = [vector];
   for (let i = 0; i<iterations; i++){
-
     let temporaryVector = numbers.matrix.multiply(vector, covariance);
     let norm = Math.sqrt(numbers.matrix.dotproduct(temporaryVector[0],temporaryVector[0]));
+
     temporaryVector = numbers.matrix.scalar(temporaryVector, 1/norm);
+    console.log("vector", temporaryVector, "powerIteration round", i);
     vector = temporaryVector;
 
   }
@@ -77,6 +79,7 @@ function powerIteration (vector, covariance, iterations) {
 
 // dataset in this case must already be normalized and standardized
 // given a covariance matrix SHOULD compute the the first n eigenvectors and their corresponding eigenvalues
+// DONT USE THIS FUNCTION IT DOESNT DO ANYTHING
 function computeEigenvalues (covariance, iterations) {
   let dimension = covariance.length;
   let basisArray = new Array(dimension).fill().map(() => new Array(dimension).fill(0));
@@ -91,24 +94,20 @@ function computeEigenvalues (covariance, iterations) {
   return basisArray;
 }
 
-function specialPowerIteration (vector, covariance, iterations, trace) {
+function specialPowerIteration (vector, covariance, iterations, bound) {
   let dimension = vector.length;
   vector = [vector];
   for (let i = 0; i<iterations; i++){
-    console.log("vector length:", vector[0].length);
-    console.log("matrix dimensions:", covariance.length, covariance[0].length);
     let temporaryVector = numbers.matrix.multiply(vector, covariance);
-    temporaryVector = numbers.matrix.subtraction(temporaryVector, numbers.matrix.scalar(vector, trace));
-
-    temporaryVector = numbers.matrix.scalar(temporaryVector, -1);
+    temporaryVector = numbers.matrix.subtraction(numbers.matrix.scalar(vector, bound),temporaryVector);
 
     let norm = Math.sqrt(numbers.matrix.dotproduct(temporaryVector[0],temporaryVector[0]));
     temporaryVector = numbers.matrix.scalar(temporaryVector, 1/norm);
 
     vector = temporaryVector;
 
-    if(i === 100) console.log("specialPowerIteration: on iteration", i);
-    if(i%2000 === 0) console.log("specialPowerIteration: on iteration", i);
+    console.log("specialPowerIteration: on iteration", i);
+    console.log("specialPowerIteration: current vector", vector);
   }
 
   return vector[0];
@@ -129,12 +128,16 @@ function createRandomVector(dimension){
 
 function computeSmallestEigenvalue(covariance, iterations){
   let dimension = covariance.length;
-  let trace = findTrace(covariance);
-  console.log("computeSmallestEigenvalue: trace found");
+  let tempVector = createRandomVector(dimension);
+  let largestEigenvector = powerIteration(tempVector, covariance, iterations);
+  let largestEigenvectorScaled = numbers.matrix.multiply([largestEigenvector], covariance)[0];
+  console.log("largestEigenvectorScaled", largestEigenvectorScaled);
+  let largestEigenvalue = Math.sqrt(numbers.matrix.dotproduct(largestEigenvectorScaled,largestEigenvectorScaled));
+  console.log("computeSmallestEigenvalue: largest eigenvalue found- equal to ", largestEigenvalue);
   let vector = createRandomVector(dimension);
   console.log("createRandomVector");
   // first we find a vector that moves a lot on its first go;
-  return specialPowerIteration(vector, covariance, iterations, trace);
+  return specialPowerIteration(vector, covariance, iterations, 2*largestEigenvalue);
 }
 
 // takes a direction and calculates an OrthonormalBasis for the hyperplane orthogonal to it
@@ -149,6 +152,7 @@ function orthonormalBasis(vector){
       let norm = Math.sqrt(numbers.matrix.dotproduct(randomVector[0],randomVector[0]));
       randomVector = numbers.matrix.scalar(randomVector, 1/norm);
     }
+    console.log("orthonormalBasis: iteration", i);
     basis.push(randomVector);
   }
   return basis;
@@ -186,11 +190,11 @@ function filter(dataset, basisVectors, toNormalize){
     normalizedData = normalizeMatrix(transformedData, dimension);
     console.log("normalizedData initialized");
     covarianceMatrix = computeCovariance(normalizedData, dimension);
-    console.log("covarianceMatrix initialized");
+    console.log("covarianceMatrix initialized:", covarianceMatrix);
   }else{
     covarianceMatrix = computeCovariance(transformedData, dimension);
   }
-  let smallestComponent = computeSmallestEigenvalue(covarianceMatrix, 100000);
+  let smallestComponent = computeSmallestEigenvalue(covarianceMatrix, 100);
   console.log("smallestComponent initialized");
   let newBasis = orthonormalBasis([smallestComponent]);
   console.log("newBasis initialized");
