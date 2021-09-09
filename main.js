@@ -48,7 +48,7 @@ let newData = data.then((data) => {
   dataArray.push(filteredData);
   return filteredData;
 });
-for (int i = 1; i < 1000; i++){
+for (let i = 1; i < 1000; i++){
   data = newData.then(
     (filteredData) => {
       let randomFiles = randomlyChooseFiles(array.state, numberOfFilesGiveni(i));

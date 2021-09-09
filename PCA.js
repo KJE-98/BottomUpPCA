@@ -142,8 +142,8 @@ function computeSmallestEigenvalue(covariance, iterations){
 
 // takes a direction and calculates an OrthonormalBasis for the hyperplane orthogonal to it
 function orthonormalBasis(vector){
-  let dimension = vector[0].length
-  let basis = [vector];
+  let dimension = vector.length;
+  /*let basis = [vector];
   for (let i = 1; i<dimension; i++){
     let randomVector = [createRandomVector(dimension)];
     for (basisVector of basis){
@@ -154,7 +154,22 @@ function orthonormalBasis(vector){
     }
     console.log("orthonormalBasis: iteration", i);
     basis.push(randomVector);
-  }
+  }*/
+  let tempVector = vector.map((element, index, vector) => {
+    if (index = 0){return element - Math.sqrt(numbers.matrix.dotproduct(vector,vector))} else {
+      return element;
+    }
+  });
+  //calculation
+  let denominator = numbers.matrix.dotproduct(tempVector, tempVector);
+  let numerator = numbers.matrix.multiply(numbers.matrix.transpose([tempVector]),[tempVector]);
+  console.log("orthonormalBasis: outer product of tempVector with itself calculated")
+  let identity = numbers.matrix.identity(dimension);
+  let tempBasis = numbers.matrix.subtraction(
+    identity,
+    numbers.matrix.scalar(numerator,1/denominator)
+  );
+  let basis = tempBasis.map((element) => {return [element]});
   return basis;
 }
 
@@ -194,9 +209,9 @@ function filter(dataset, basisVectors, toNormalize){
   }else{
     covarianceMatrix = computeCovariance(transformedData, dimension);
   }
-  let smallestComponent = computeSmallestEigenvalue(covarianceMatrix, 100);
+  let smallestComponent = computeSmallestEigenvalue(covarianceMatrix, 10);
   console.log("smallestComponent initialized");
-  let newBasis = orthonormalBasis([smallestComponent]);
+  let newBasis = orthonormalBasis(smallestComponent);
   console.log("newBasis initialized");
   return [smallestComponent, newBasis];
 }
