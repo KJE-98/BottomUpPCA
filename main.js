@@ -16,7 +16,8 @@ let newData = data.then((data) => {
   //console.log("promise data;", data);
   let filteredData = runFilter(data, defaultBasis);
   //console.log(filteredData);
-  dataArray.push(filteredData);
+  dataArray.push(filteredData[1]);
+  dataArray.push(filteredData[0]);
   return filteredData;
 });
 for (let i = 1; i < 10304; i++){
@@ -25,10 +26,11 @@ for (let i = 1; i < 10304; i++){
   );
   data = array.then((result) => Promise.all(result));
   newData = data.then((data) => {
-    let newBasis = dataArray[i-1][1].slice(1);
+    let newBasis = dataArray[0].slice(1);
     let newData = data;
     let filteredData = runFilter(data, newBasis, false);
-    dataArray.push(filteredData);
+    dataArray.push(filteredData[0]);
+    dataArray[0] = filteredData[1];
     //console.log(filteredData);
     return filteredData;
   });
